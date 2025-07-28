@@ -1,5 +1,6 @@
 # CTF Management Server
 
+## Description
 A CTF management server which is built for orchestrating a distributed CTF.
 <br>
 
@@ -9,6 +10,12 @@ This is a central control server which is responsible for handling:
 - Player registration and login
 - Managing player state
 - Container deployment with working in coordination with worker nodes
+
+## Running the server
+```bash
+npm i
+node server.js
+```
 
 ## Configuration
 
