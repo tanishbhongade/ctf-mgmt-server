@@ -31,7 +31,7 @@ There are two configuration files in this system which you have to configure:
 
 ## API Endpoints
 
-### POST `/api/v1/users/register`
+### POST `/api/user/register`
 
 ### Description:
 
@@ -46,7 +46,7 @@ Registers a new player and creates a container for them.
 }
 ```
 
-### POST `/api/v1/users/login`
+### POST `/api/user/login`
 
 ### Description:
 
@@ -62,7 +62,7 @@ Returns a success message and sets a secure JWT in a cookie for future requests.
 }
 ```
 
-### POST `/api/v1/player/submitFlag`
+### POST `/api/player/submitFlag`
 
 ### Description:
 
