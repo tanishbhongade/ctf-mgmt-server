@@ -62,7 +62,7 @@ Returns a success message and sets a secure JWT in a cookie for future requests.
 }
 ```
 
-### POST `/api/player/submitFlag`
+### POST `/api/player/submitflag`
 
 ### Description:
 
@@ -73,5 +73,19 @@ Checks whether the flag submitted by the player is correct or not according to t
 ```json
 {
   "flag": "flag{JUSTANOTHERRANDOMFLAG}"
+}
+```
+
+### PATCH `/api/player/resetlevel`
+
+### Description:
+
+Lets the user to reset the level, if something goes wrong.
+
+### Request Body:
+
+```json
+{
+  
 }
 ```
