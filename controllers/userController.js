@@ -14,7 +14,6 @@ const PORT = Number.parseInt(process.env.PORT)
 
 let WORKER_NODES = getConfigurationData()
 
-
 const getNextWorkerNode = async (next) => {
     if (WORKER_NODES.length === 0) {
         throw new AppError('internal server error', 500)
@@ -82,23 +81,33 @@ const login = catchAsync(async (req, res) => {
         return next(new AppError('invalid credentials', 401))
     }
 
-    createSendToken(playerId, res)
+    const jwtToken = signToken(playerId)
+    player.playerJWT = { token: jwtToken, isActive: true }
+    await player.save()
+
+    res.cookie('jwt', jwtToken, { httpOnly: true, maxAge: 60 * 60 * 1000 })
+    res.status(200).json({
+        status: 'success',
+        data: { playerId }
+    })
 })
 
 const register = catchAsync(async (req, res, next) => {
     const levelObj = await levelController.getLevelDocument(0)
     const playerId = req.body.playerId
     const playerPassword = req.body.playerPassword
-
+    
+    // PlayerID and player password are required to sign up
     if (!playerId || !playerPassword) {
         return next(new AppError('playerId and password are required to sign up', 400))
     }
-
+    
     const signature = signPayload({
         imageName: levelObj.imageName
     })
     const workerNode = await getNextWorkerNode()
-
+    
+    // Create initial container on worker node
     const response = await axios.post(
         `http://${workerNode}/api/container/createContainer`,
         {
@@ -110,7 +119,7 @@ const register = catchAsync(async (req, res, next) => {
             },
         }
     );
-
+    
     const {
         containerId,
         sshPort,
@@ -118,19 +127,23 @@ const register = catchAsync(async (req, res, next) => {
         password,
         hostIP,
     } = response.data.data;
-
+    
     const hashedPassword = await hashPassword(playerPassword)
+    const jwtToken = signToken(playerId)
     await Player.create({
         containerId,
         sshPort,
         username,
         password,
-        HostIP: hostIP,
+        hostIP: hostIP,
         playerId,
-        playerPassword: hashedPassword
+        playerPassword: hashedPassword,
+        playerJWT: {
+            token: jwtToken,
+            isActive: true
+        }
     })
 
-    const jwtToken = signToken(playerId)
     res.cookie('jwt', jwtToken, {
         httpOnly: true,
         maxAge: 60 * 60 * 1000
@@ -146,8 +159,26 @@ const register = catchAsync(async (req, res, next) => {
     })
 })
 
+const signOut = catchAsync(async (req, res, next) => {
+    const player = await Player.findOneAndUpdate({
+        playerId: req.body.playerId
+    }, {
+        $set: {
+            'playerJWT.isActive': false
+        }
+    })
+
+    res.clearCookie('jwt')
+    res.status(200).json({
+        status: 'success',
+        message: 'Signed out successfully!'
+    })
+})
+
 module.exports = {
     register,
     login,
-    signPayload
+    signPayload,
+    signOut,
+    createSendToken
 }

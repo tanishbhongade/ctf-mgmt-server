@@ -17,7 +17,7 @@ const playerSchema = new mongoose.Schema({
         required: [true, 'A player must have SSH port'],
         unique: true
     },
-    HostIP: {
+    hostIP: {
         type: String,
         default: '127.0.0.1',
         required: true
@@ -38,6 +38,16 @@ const playerSchema = new mongoose.Schema({
     },
     playerPassword: {
         type: String,
+    },
+    playerJWT: {
+        token: {
+            type: String,
+            default: ''
+        },
+        isActive: {
+            type: Boolean,
+            default: false
+        }
     }
 })
 
