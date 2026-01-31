@@ -1,5 +1,8 @@
 {
-    "workerNodes": [
-        "nodeip:port"
+    "workers": [
+        {
+            "host": "ip-addr",
+            "port": 0
+        }
     ]
 }

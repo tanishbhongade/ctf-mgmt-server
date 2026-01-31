@@ -7,7 +7,7 @@ const getLevelDocument = async (level) => {
             level
         })
         if (!levelObj) {
-            throw new Error('Level not found')
+            throw new Error('Level not found', 404)
         }
 
         return levelObj

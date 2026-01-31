@@ -15,7 +15,6 @@ const playerSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         required: [true, 'A player must have SSH port'],
-        unique: true
     },
     hostIP: {
         type: String,
@@ -50,6 +49,11 @@ const playerSchema = new mongoose.Schema({
         }
     }
 })
+
+playerSchema.index(
+    { hostIP: 1, sshPort: 1 },
+    { unique: true }
+)
 
 const Player = mongoose.model('Player', playerSchema)
 

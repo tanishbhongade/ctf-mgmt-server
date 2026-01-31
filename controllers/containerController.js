@@ -1,11 +1,13 @@
 const axios = require('axios')
 const { signPayload } = require('./userController')
 
+
 const deleteContainer = async (player) => {
+    const WORKER_NODES = global.WORKER_NODES
     const deletionsignature = signPayload({ containerId: player.containerId });
 
     const response = await axios.delete(
-        `http://${player.hostIP}:8751/api/container/deleteContainer`,
+        `http://${player.hostIP}:${WORKER_NODES.get(player.hostIP)}/api/container/deleteContainer`,
         {
             data: {
                 containerId: player.containerId
@@ -19,9 +21,10 @@ const deleteContainer = async (player) => {
 };
 
 const createContainer = async (player, levelObj) => {
+    const WORKER_NODES = global.WORKER_NODES
     const creationsignature = signPayload({ imageName: levelObj.imageName })
     const response = await axios.post(
-        `http://${player.hostIP}:8751/api/container/createContainer`,
+        `http://${player.hostIP}:${WORKER_NODES.get(player.hostIP)}/api/container/createContainer`,
         {
             imageName: levelObj.imageName,
         },

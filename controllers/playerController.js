@@ -1,25 +1,22 @@
-const express = require('express');
-const Player = require('./../models/playerModel');
-const Level = require('./../models/levelModel');
-const Scheduler = require('./../models/schedulerModel')
-const { getLevelDocument } = require('./levelController')
-const { signPayload } = require('./userController')
 const axios = require('axios');
-const crypto = require('crypto')
+const Player = require('./../models/playerModel');
 const AppError = require('./../utils/AppError')
 const catchAsync = require('./../utils/catchAsync')
+const { getLevelDocument } = require('./levelController')
+const { signPayload } = require('./userController')
 const { deleteContainer, createContainer } = require('./containerController')
 
+
 const resetLevel = catchAsync(async (req, res, next) => {
-    // console.log(containerId)
+    let WORKER_NODES = global.WORKER_NODES
     const player = await Player.findOne({ playerId: req.body.playerId })
     if (!player) {
-        return next(new AppError('Player not foiund', 404))
+        return next(new AppError('player not found', 404))
     }
     const containerId = player.containerId
     const resetsignature = signPayload({ containerId: player.containerId })
     await axios.patch(
-        `http://${player.hostIP}:8751/api/container/restartContainer`, {
+        `http://${player.hostIP}:${WORKER_NODES.get(player.hostIP)}/api/container/restartContainer`, {
         containerId
     }, {
         headers: {
@@ -29,7 +26,7 @@ const resetLevel = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
-        data: 'Level successfully resetted!'
+        data: 'level successfully resetted'
     })
 })
 

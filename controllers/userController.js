@@ -7,20 +7,22 @@ const crypto = require('crypto')
 const Scheduler = require('./../models/schedulerModel')
 const catchAsync = require('./../utils/catchAsync')
 const AppError = require('./../utils/AppError')
-const getConfigurationData = require('./../utils/configPuller')
 
 const ROUNDS = 10
 const PORT = Number.parseInt(process.env.PORT)
 
-let WORKER_NODES = getConfigurationData()
-
 const getNextWorkerNode = async (next) => {
-    if (WORKER_NODES.length === 0) {
+    const WORKER_HOSTS = global.WORKER_HOSTS
+    const WORKER_NODES = global.WORKER_NODES
+
+    if (WORKER_HOSTS.length === 0) {
         throw new AppError('internal server error', 500)
     }
 
-    if (WORKER_NODES.length === 1) {
-        return WORKER_NODES[0];
+    if (WORKER_HOSTS.length === 1) {
+        const host = WORKER_HOSTS[0];
+        const port = WORKER_NODES.get(host);
+        return `${host}:${port}`;
     }
 
     const scheduler = await Scheduler.findOneAndUpdate(
@@ -33,8 +35,12 @@ const getNextWorkerNode = async (next) => {
         }
     );
 
-    const nodeIndex = scheduler.currentNodeIndex % WORKER_NODES.length;
-    return WORKER_NODES[nodeIndex];
+    const nodeIndex = scheduler.currentNodeIndex % WORKER_HOSTS.length;
+
+    const host = WORKER_HOSTS[nodeIndex]
+    const port = WORKER_NODES.get(host)
+
+    return `${host}:${port}`
 };
 
 const signPayload = (data) => {
@@ -69,7 +75,7 @@ const hashPassword = async (plainTextPassword) => {
     return await bcrypt.hash(plainTextPassword, ROUNDS)
 }
 
-const login = catchAsync(async (req, res) => {
+const login = catchAsync(async (req, res, next) => {
     const { playerId, playerPassword } = req.body
 
     if (!playerId || !playerPassword) {
@@ -96,17 +102,17 @@ const register = catchAsync(async (req, res, next) => {
     const levelObj = await levelController.getLevelDocument(0)
     const playerId = req.body.playerId
     const playerPassword = req.body.playerPassword
-    
+
     // PlayerID and player password are required to sign up
     if (!playerId || !playerPassword) {
         return next(new AppError('playerId and password are required to sign up', 400))
     }
-    
+
     const signature = signPayload({
         imageName: levelObj.imageName
     })
     const workerNode = await getNextWorkerNode()
-    
+
     // Create initial container on worker node
     const response = await axios.post(
         `http://${workerNode}/api/container/createContainer`,
@@ -119,7 +125,7 @@ const register = catchAsync(async (req, res, next) => {
             },
         }
     );
-    
+
     const {
         containerId,
         sshPort,
@@ -127,7 +133,7 @@ const register = catchAsync(async (req, res, next) => {
         password,
         hostIP,
     } = response.data.data;
-    
+
     const hashedPassword = await hashPassword(playerPassword)
     const jwtToken = signToken(playerId)
     await Player.create({
@@ -155,7 +161,6 @@ const register = catchAsync(async (req, res, next) => {
         password,
         hostIP,
         playerId,
-        playerPassword: hashedPassword
     })
 })
 

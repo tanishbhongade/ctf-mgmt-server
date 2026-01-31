@@ -10,6 +10,18 @@ const DB_USERNAME = process.env.DB_USERNAME
 const DB_PASSWORD = process.env.DB_PASSWORD
 const DB_IPADDR = process.env.DB_IPADDR
 
+const getConfigurationData = require('./utils/configPuller')
+global.WORKER_NODES = new Map()
+global.WORKER_HOSTS = [];
+
+const workers = getConfigurationData()
+
+workers.forEach(w => {
+    global.WORKER_NODES.set(w.host, w.port)
+    global.WORKER_HOSTS.push(w.host)
+})
+
+
 const wargamesDB = `mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_IPADDR}:${DB_PORT}/wargames?authSource=admin`
 
 mongoose.connect(wargamesDB)
@@ -18,5 +30,5 @@ mongoose.connect(wargamesDB)
     })
 
 app.listen(PORT, () => {
-    console.log("Server running on port", PORT)
+    console.log("CTF Management server running on port", PORT)
 })
