@@ -5,7 +5,7 @@ const catchAsync = require('./../utils/catchAsync')
 const { getLevelDocument } = require('./levelController')
 const { signPayload } = require('./userController')
 const { deleteContainer, createContainer } = require('./containerController')
-
+const Submission = require('./../models/submissionModel')
 
 const resetLevel = catchAsync(async (req, res, next) => {
     let WORKER_NODES = global.WORKER_NODES
@@ -31,6 +31,7 @@ const resetLevel = catchAsync(async (req, res, next) => {
 })
 
 const submitflag = catchAsync(async (req, res, next) => {
+    const timestamp = Date.now()
     const { playerId, flag } = req.body;
 
     // Player ID and flags are needed for submission
@@ -50,6 +51,12 @@ const submitflag = catchAsync(async (req, res, next) => {
     if (flag !== level.flag) {
         return next(new AppError('incorrect flag', 403))
     }
+
+    await Submission.create({
+        timestamp: timestamp,
+        playerId: player._id,
+        level: player.currentLevel
+    })
 
     // If flag is correct, start next procedure
     // Get newLevel and levelObj
