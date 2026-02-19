@@ -1,6 +1,8 @@
 const app = require('./app')
 const dotenv = require('dotenv')
 const mongoose = require('mongoose')
+const { connectProducer } = require('./utils/kafkaProducer')
+const { runConsumer } = require('./utils/kafkaConsumer')
 
 dotenv.config({ path: './config.env' })
 
@@ -24,11 +26,23 @@ workers.forEach(w => {
 
 const wargamesDB = `mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_IPADDR}:${DB_PORT}/wargames?authSource=admin`
 
-mongoose.connect(wargamesDB)
-    .then(() => {
-        console.log('Connected to DB successfully!')
-    })
+const startServer = async () => {
+    try {
+        mongoose.connect(wargamesDB)
+            .then(() => {
+                console.log('Connected to DB successfully!')
+            })
 
-app.listen(PORT, () => {
-    console.log("CTF Management server running on port", PORT)
-})
+        await connectProducer()
+        await runConsumer()
+
+        app.listen(PORT, () => {
+            console.log("CTF Management server running on port", PORT)
+        })
+    } catch (err) {
+        console.error("Critical Startup Error:", err);
+        process.exit(1);
+    }
+}
+
+startServer()
