@@ -1,15 +1,14 @@
 const catchAsync = require('../utils/catchAsync')
-const { getLeaderboard } = require('../utils/leaderboardState');
+const Submission = require('./../models/submissionModel')
 
-const fetchLeaderboard = catchAsync(async (req, res, next) => {
-    const data = getLeaderboard();
-
+const getLeaderboard = catchAsync(async (req, res, next) => {
+    const leaderboard = await Submission.getLeaderboard()
     res.status(200).json({
         status: 'success',
-        data
-    });
-});
+        data: leaderboard
+    })
+})
 
 module.exports = {
-    getLeaderboard: fetchLeaderboard
+    getLeaderboard
 }

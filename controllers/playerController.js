@@ -6,7 +6,6 @@ const { getLevelDocument } = require('./levelController')
 const { signPayload } = require('./userController')
 const { deleteContainer, createContainer } = require('./containerController')
 const Submission = require('./../models/submissionModel')
-const { connectProducer, sendEvent } = require('../utils/kafkaProducer')
 
 const resetLevel = catchAsync(async (req, res, next) => {
     let WORKER_NODES = global.WORKER_NODES
@@ -58,15 +57,6 @@ const submitflag = catchAsync(async (req, res, next) => {
         playerId: player._id,
         level: player.currentLevel
     })
-
-    await sendEvent(
-        'player-submissions',
-        {
-            timestamp: timestamp,
-            playerId: player.playerId,
-            level: player.currentLevel
-        }
-    )
 
     // If flag is correct, start next procedure
     // Get newLevel and levelObj
