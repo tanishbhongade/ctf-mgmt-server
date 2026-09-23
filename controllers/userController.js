@@ -83,7 +83,7 @@ const login = catchAsync(async (req, res, next) => {
     }
 
     const player = await Player.findOne({ playerId })
-    if (!player || !(await bcrypt.compare(playerPassword, player.playerPassword))) {
+    if (!player || !(bcrypt.compare(playerPassword, player.playerPassword))) {
         return next(new AppError('invalid credentials', 401))
     }
 
@@ -99,7 +99,6 @@ const login = catchAsync(async (req, res, next) => {
 })
 
 const register = catchAsync(async (req, res, next) => {
-    const levelObj = await levelController.getLevelDocument(0)
     const playerId = req.body.playerId
     const playerPassword = req.body.playerPassword
 
@@ -108,59 +107,18 @@ const register = catchAsync(async (req, res, next) => {
         return next(new AppError('playerId and password are required to sign up', 400))
     }
 
-    const signature = signPayload({
-        imageName: levelObj.imageName
-    })
-    const workerNode = await getNextWorkerNode()
+    let hashedPassword = await hashPassword(playerPassword)
 
-    // Create initial container on worker node
-    const response = await axios.post(
-        `http://${workerNode}/api/container/createContainer`,
-        {
-            imageName: levelObj.imageName,
-        },
-        {
-            headers: {
-                'X-Signature': signature
-            },
-        }
-    );
-
-    const {
-        containerId,
-        sshPort,
-        username,
-        password,
-        hostIP,
-    } = response.data.data;
-
-    const hashedPassword = await hashPassword(playerPassword)
-    const jwtToken = signToken(playerId)
     await Player.create({
-        containerId,
-        sshPort,
-        username,
-        password,
-        hostIP: hostIP,
         playerId,
-        playerPassword: hashedPassword,
-        playerJWT: {
-            token: jwtToken,
-            isActive: true
-        }
+        playerPassword: hashedPassword
     })
 
-    res.cookie('jwt', jwtToken, {
-        httpOnly: true,
-        maxAge: 60 * 60 * 1000
-    })
     res.status(201).json({
-        containerId,
-        sshPort,
-        username,
-        password,
-        hostIP,
-        playerId,
+        status: "success",
+        data: {
+            playerId
+        }
     })
 })
 

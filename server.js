@@ -22,7 +22,7 @@ workers.forEach(w => {
 })
 
 
-const wargamesDB = `mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_IPADDR}:${DB_PORT}/wargames?authSource=admin`
+const wargamesDB = process.env.DB_CONN_STRING;
 
 mongoose.connect(wargamesDB)
     .then(() => {

@@ -13,29 +13,22 @@ const playerSchema = new mongoose.Schema({
     },
     sshPort: {
         type: Number,
-        default: 0,
-        required: [true, 'A player must have SSH port'],
     },
     hostIP: {
         type: String,
-        default: '127.0.0.1',
-        required: true
     },
     password: {
         type: String,
-        default: '',
     },
     username: {
         type: String,
-        default: 'myuser',
-        required: true
     },
     containerId: {
         type: String,
-        default: '',
-        unique: true,
+        unique: true
     },
     playerPassword: {
+        // Password of the user (while registration)
         type: String,
     },
     playerJWT: {

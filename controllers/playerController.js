@@ -4,7 +4,6 @@ const AppError = require('./../utils/AppError')
 const catchAsync = require('./../utils/catchAsync')
 const { getLevelDocument } = require('./levelController')
 const { signPayload } = require('./userController')
-const { deleteContainer, createContainer } = require('./containerController')
 const Submission = require('./../models/submissionModel')
 
 const resetLevel = catchAsync(async (req, res, next) => {
@@ -58,23 +57,7 @@ const submitflag = catchAsync(async (req, res, next) => {
         level: player.currentLevel
     })
 
-    // If flag is correct, start next procedure
-    // Get newLevel and levelObj
     const newLevel = player.currentLevel + 1;
-    const levelObj = await getLevelDocument(newLevel);
-
-    // Delete old container
-    await deleteContainer(player)
-
-    // Create new container
-    const containerCreationResponse = await createContainer(player, levelObj)
-    const {
-        containerId,
-        sshPort,
-        username,
-        password,
-        hostIP,
-    } = containerCreationResponse.data;
 
     // Update the new details in the player database
     await Player.findOneAndUpdate(
@@ -82,11 +65,6 @@ const submitflag = catchAsync(async (req, res, next) => {
         {
             $set: {
                 currentLevel: newLevel,
-                containerId,
-                sshPort,
-                username,
-                password,
-                hostIP: hostIP,
             },
         }
     );
@@ -94,7 +72,6 @@ const submitflag = catchAsync(async (req, res, next) => {
     // Send successful response to player
     return res.status(200).json({
         status: 'success',
-        data: containerCreationResponse.data,
     });
 });
 
